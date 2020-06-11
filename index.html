@@ -1,1 +1,133 @@
-<h1>hello, world!</h1>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>广州市职业技能鉴定所分布地图</title>
+    <script src="https://map.qq.com/api/js?v=2.exp&key=SEBBZ-NGXKJ-U6LFN-KF6PF-LDJA2-E6FG5" charset="utf-8"></script>
+    <script src="js/jquery-1.11.3.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    
+    body,
+    html {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .list {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        padding-left: 4px;
+        line-height: 1.8em;
+        z-index: 2;
+    }
+    
+    .list:hover {
+        background-color: #DDD;
+    }
+    
+    #container {
+        height: 100%;
+    }
+    
+    #searchbar {
+        position: absolute;
+        width: 330px;
+        height: 60px;
+        left: 20px;
+        top: 20px;
+        float: left;
+        z-index: 1;
+        background-color: white;
+        border: 1px solid lightgray;
+        padding: 10px;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="searchbar">
+        <form id="form1" method="post">
+            <input id="input1" type="text" class="form-control" placeholder="请输入鉴定所名称" style="width: 250px; display: inline;">
+            <button type="button" class="btn btn-default" id="btn1" data-toggle="modal" data-target="#myModal">查找</button>
+        </form>
+    </div>
+    <div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" id="btnClose" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span> </button>
+                    <h4 class="modal-title" id="myModalLabel">广州市职业技能鉴定所目录</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="listbar" style="width:100%; height:500px; overflow:scroll">
+                        <!-- show list here -->
+                    </ul>
+                </div>
+            </div>
+        </div><!-- modal-dialog -->
+    </div><!-- myModal -->
+    <div id="container"></div>
+</body>
+
+</html>
+<script type="text/javascript">
+$(document).ready(function() {
+    var map = new qq.maps.Map(document.getElementById("container"), {
+        center: new qq.maps.LatLng(23.11878, 113.28606),
+        zoom: 13,
+        disableDefaultUI: true
+    });
+    var marker = new Array();
+    var info = new Array();
+    var info = new qq.maps.InfoWindow({
+        map: map
+    });
+    $.getJSON('gz_osta_map.json', function(result) {
+        $.each(result, function(i) {
+            var id = result[i].序号;
+            $("#listbar").append("<li class=\"list\" alt=" + result[i].序号 + ">" + result[i].鉴定所 + "</li>");
+            marker[id] = new qq.maps.Marker({
+                map: map,
+                position: new qq.maps.LatLng(result[i].纬度, result[i].经度),
+                title: '<p><b>' + result[i].鉴定所 + '</b></p><p>地址：' + result[i].地址 + '</p><p>电话：' + result[i].电话 + '</p>'
+            });
+            qq.maps.event.addListener(marker[id], 'click', function() {
+                var position = new qq.maps.LatLng(result[i].纬度, result[i].经度);
+                info.open();
+                info.setContent('<div style="text-align:center;white-space:nowrap;margin:4px;"><p><b>' + result[i].鉴定所 + '</b></p><p>地址：' + result[i].地址 + '</p><p>电话：' + result[i].电话 + '</p></div>');
+                info.setPosition(position);
+            });
+        });
+    });
+    $("body").on("click", ".list", function(event) {
+        var n = $(event.target).attr('alt');
+        info.setPosition(marker[n].position);
+        info.setContent('<div style="text-align:center;white-space:nowrap;margin:8px;">' + marker[n].title + '</div>');
+        info.open();
+        $("#btnClose").click();
+    });
+    $("#btn1").click(function() {
+        $(".list")
+            .hide()
+            .filter(":contains('" + ($("#input1").val()) + "')")
+            .show();
+    });
+    $("#btn2").click(function() {
+        $(".list")
+            .hide()
+            .filter(':parent')
+            .show();
+        $("#input1").val("").focus();
+    })
+});
+</script>
